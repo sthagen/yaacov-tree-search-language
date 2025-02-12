@@ -1,0 +1,8 @@
+.vscode
+
+pkg/tsl/lex.yy.c
+pkg/tsl/tsl_parser.tab.c
+pkg/tsl/tsl_parser.tab.h
+
+/tsl
+/tsl_parser
