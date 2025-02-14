@@ -45,7 +45,7 @@ typedef struct ast_node {
 /* AST node creation functions */
 ast_node *ast_create_null(void);
 ast_node *ast_create_boolean(int value);
-ast_node *ast_create_number(double value);
+ast_node *ast_create_number(const char *value_str);  /* Changed from double to const char* */
 ast_node *ast_create_string(const char *value);
 ast_node *ast_create_identifier(const char *value);
 ast_node *ast_create_binary(int op, ast_node *left, ast_node *right);
@@ -54,6 +54,14 @@ ast_node *ast_create_date(const char *value);
 ast_node *ast_create_rfc3339(const char *value);
 ast_node *ast_create_array(int size, ast_node **elements);
 ast_node *ast_clone(const ast_node *node);
+
+/* AST node manipulation functions */
+ast_node *ast_detach_binary_left(ast_node *node);
+ast_node *ast_detach_binary_right(ast_node *node);
+ast_node *ast_detach_unary_child(ast_node *node);
+int ast_attach_binary_left(ast_node *node, ast_node *child);
+int ast_attach_binary_right(ast_node *node, ast_node *child);
+int ast_attach_unary_child(ast_node *node, ast_node *child);
 
 /* AST printing functions */
 void ast_print(const ast_node *node);

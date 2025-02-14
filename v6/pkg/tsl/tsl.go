@@ -25,7 +25,6 @@ package tsl
 */
 import "C"
 import (
-	"fmt"
 	"time"
 	"unsafe"
 )
@@ -60,7 +59,12 @@ func ParseTSL(input string) (*TSLNode, error) {
 		// Cleanup parser memory after getting error information
 		C.cleanup_parser_memory()
 
-		return nil, fmt.Errorf("%s at position %d:\n%s\n%s", errStr, errPos, input, errCtx)
+		return nil, &SyntaxError{
+			Message:  errStr,
+			Position: errPos,
+			Context:  errCtx,
+			Input:    input,
+		}
 	}
 
 	// Cleanup parser memory after successful parse
@@ -77,8 +81,8 @@ func (n *TSLNode) Free() {
 }
 
 // Type returns the type of the node
-func (n *TSLNode) Type() NodeKind {
-	return NodeKind(n.cNode._type)
+func (n *TSLNode) Type() Kind {
+	return Kind(n.cNode._type)
 }
 
 // Value returns the node's value based on its type
@@ -123,4 +127,64 @@ func (n *TSLNode) Value() interface{} {
 	default:
 		return nil
 	}
+}
+
+// DetachLeft safely detaches and returns the left child of a binary expression node
+func (n *TSLNode) DetachLeft() *TSLNode {
+	if n == nil || n.Type() != KindBinaryExpr {
+		return nil
+	}
+	cNode := C.ast_detach_binary_left(n.cNode)
+	if cNode == nil {
+		return nil
+	}
+	return &TSLNode{cNode: cNode}
+}
+
+// DetachRight safely detaches and returns the right child of a binary expression node
+func (n *TSLNode) DetachRight() *TSLNode {
+	if n == nil || n.Type() != KindBinaryExpr {
+		return nil
+	}
+	cNode := C.ast_detach_binary_right(n.cNode)
+	if cNode == nil {
+		return nil
+	}
+	return &TSLNode{cNode: cNode}
+}
+
+// DetachChild safely detaches and returns the child of a unary expression node
+func (n *TSLNode) DetachChild() *TSLNode {
+	if n == nil || n.Type() != KindUnaryExpr {
+		return nil
+	}
+	cNode := C.ast_detach_unary_child(n.cNode)
+	if cNode == nil {
+		return nil
+	}
+	return &TSLNode{cNode: cNode}
+}
+
+// AttachLeft safely attaches a child node as the left child of a binary expression node
+func (n *TSLNode) AttachLeft(child *TSLNode) bool {
+	if n == nil || child == nil || n.Type() != KindBinaryExpr {
+		return false
+	}
+	return C.ast_attach_binary_left(n.cNode, child.cNode) != 0
+}
+
+// AttachRight safely attaches a child node as the right child of a binary expression node
+func (n *TSLNode) AttachRight(child *TSLNode) bool {
+	if n == nil || child == nil || n.Type() != KindBinaryExpr {
+		return false
+	}
+	return C.ast_attach_binary_right(n.cNode, child.cNode) != 0
+}
+
+// AttachChild safely attaches a child node to a unary expression node
+func (n *TSLNode) AttachChild(child *TSLNode) bool {
+	if n == nil || child == nil || n.Type() != KindUnaryExpr {
+		return false
+	}
+	return C.ast_attach_unary_child(n.cNode, child.cNode) != 0
 }

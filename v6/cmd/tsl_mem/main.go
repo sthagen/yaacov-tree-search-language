@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"log"
 
-	prettyjson "github.com/hokaccha/go-prettyjson"
 	"github.com/yaacov/tree-search-language/v6/pkg/tsl"
 	"github.com/yaacov/tree-search-language/v6/pkg/walkers/ident"
 	"github.com/yaacov/tree-search-language/v6/pkg/walkers/semantics"
@@ -44,7 +43,7 @@ func main() {
 
 	// Setup the input.
 	inputPtr := flag.String("i", "", "the tsl string to parse (e.g. \"author = 'Joe'\")")
-	outputPtr := flag.String("o", "json", "output format [json/yaml/prettyjson]")
+	outputPtr := flag.String("o", "json", "output format [json/yaml]")
 	flag.Parse()
 
 	// Sanity check.
@@ -57,23 +56,18 @@ func main() {
 	check(err)
 	defer tree.Free()
 
-	// Get identifiers from the tree and validate them
-	identifiers, err := ident.Walk(tree)
+	// Walk the TSL tree and replace identifiers.
+	newTree, _, err := ident.Walk(tree, checkColumnName)
 	check(err)
-
-	for _, id := range identifiers {
-		_, err := checkColumnName(id)
-		check(err)
-	}
 
 	// Prepare the books in memory collection.
 	err = prepareCollection()
 	check(err)
 
-	// Filter the books collection using our TSL tree.
+	// Filter the books collection using our transformed TSL tree.
 	for _, book := range Books {
 		eval := evalFactory(book)
-		matchingFilter, err := semantics.Walk(tree, eval)
+		matchingFilter, err := semantics.Walk(newTree, eval)
 		check(err)
 
 		// Convert interface{} to bool
@@ -88,8 +82,6 @@ func main() {
 		s, err = json.Marshal(books)
 	case "yaml":
 		s, err = yaml.Marshal(books)
-	case "prettyjson":
-		s, err = prettyjson.Marshal(books)
 	default:
 		err = fmt.Errorf("unsuported output format: %s", *outputPtr)
 	}
