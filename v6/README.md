@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yaacov/tree-search-language/master/img/search-162.png" alt="TSL Logo">
+  <img src="https://raw.githubusercontent.com/yaacov/tree-search-language/master/v6/img/search-162.png" alt="TSL Logo">
 </p>
 
 # Tree Search Language (TSL)
@@ -357,10 +357,11 @@ if err != nil {
 defer tree.Free()
 
 // Check and replace user identifiers with the SQL table column names.
-tree, err = ident.Walk(tree, checkColumnName)
+newTree, err = ident.Walk(tree, checkColumnName)
 if err != nil {
     log.Fatal(err)
 }
+defer newTree.Free() // mewTree is a clone that needs freeing.
 ...
 ```
 
@@ -382,14 +383,13 @@ import (
 // A function that gets a `key` for a record and returns the value.
 // If no value can be found for this `key` in our record, it will return
 // ok = false, if value is found it will return ok = true.
-func evalFactory(r map[string]string) semantics.EvalFunc {
-    return func(k string) (interface{}, error) {
-        v, ok := r[k]
-        if !ok {
-            return nil, fmt.Errorf("key not found: %s", k)
-        }
-        return v, nil
-    }
+func evalFactory(book Book) semantics.EvalFunc {
+	return func(k string) (interface{}, bool) {
+		if v, ok := book[k]; ok {
+			return v, true
+		}
+		return nil, false
+	}
 }
 
 // Check if a record complies with our tsl tree.

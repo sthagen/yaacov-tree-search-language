@@ -59,6 +59,7 @@ func main() {
 	// Walk the TSL tree and replace identifiers.
 	newTree, _, err := ident.Walk(tree, checkColumnName)
 	check(err)
+	defer newTree.Free()
 
 	// Prepare the books in memory collection.
 	err = prepareCollection()
@@ -67,6 +68,7 @@ func main() {
 	// Filter the books collection using our transformed TSL tree.
 	for _, book := range Books {
 		eval := evalFactory(book)
+
 		matchingFilter, err := semantics.Walk(newTree, eval)
 		check(err)
 

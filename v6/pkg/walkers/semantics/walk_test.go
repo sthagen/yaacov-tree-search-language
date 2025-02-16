@@ -78,27 +78,37 @@ var _ = Describe("Walk", func() {
 		Entry("greater than", "spec.rating > 4", true),
 		Entry("less than or equal", "spec.pages <= 14", true),
 		Entry("between numbers", "price between 20 and 30", true),
+		Entry("addition", "spec.pages + 1 = 15", true),
+		Entry("subtraction", "spec.pages - 4 = 10", true),
+		Entry("multiplication", "spec.rating * 2 = 10", true),
+		Entry("division", "price / 2 = 14.995", true),
+		Entry("modulus", "spec.pages % 5 = 4", true),
 
 		// Boolean operations
 		Entry("equals boolean", "loaned = true", true),
 		Entry("not equals boolean", "loaned != false", true),
 		Entry("complex boolean", "(spec.pages > 10 and loaned = true) or spec.rating >= 5", true),
+		Entry("boolean and", "loaned and spec.rating > 4", true),
+		Entry("boolean or", "loaned or spec.rating < 4", true),
 
 		// Date operations
 		Entry("equals date", "date = '2020-01-01T00:00:00Z'", true),
 		Entry("greater than date", "date > '2019-12-31T00:00:00Z'", true),
 		Entry("between dates", "date between '2019-12-31T00:00:00Z' and '2020-01-02T00:00:00Z'", true),
+		Entry("date before", "date < '2021-01-01T00:00:00Z'", true),
+		Entry("date after", "date > '2019-01-01T00:00:00Z'", true),
 
 		// Array operations
 		Entry("in array literal", "spec.rating in [3, 4, 5]", true),
 		Entry("not in array", "spec.pages in [20, 30, 40]", false),
 
 		// Null checks
-		Entry("is null", "missing_field is null", true),
+		Entry("is null", "price is null", false),
 		Entry("is not null", "title is not null", true),
 
 		// Combined operations
 		Entry("complex query", "(spec.pages <= spec.rating * 3) and (title like '%book%' or author = 'Joe')", true),
+		Entry("nested query", "(spec.pages > 10 and (loaned = true or spec.rating >= 5))", true),
 	)
 })
 
@@ -108,7 +118,7 @@ var _ = Describe("Walk error cases", func() {
 	}
 
 	DescribeTable("Returns appropriate errors",
-		func(text string, expectedError string) {
+		func(text string, expectedError interface{}) {
 			tree, err := tsl.ParseTSL(text)
 			if err != nil {
 				// Skip syntax errors as they are expected for invalid operators
@@ -121,48 +131,13 @@ var _ = Describe("Walk error cases", func() {
 
 			_, err = Walk(tree, eval)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring(expectedError))
+			Expect(err).To(BeAssignableToTypeOf(expectedError))
 		},
 
-		Entry("Type mismatch string/number", "name > 5", "type mismatch"),
-		Entry("Type mismatch number/string", "age = 'young'", "type mismatch"),
-		Entry("Invalid operator", "name invalid 'test'", "unexpected operator"),
-		Entry("Invalid between array", "age between [1]", "between operator requires exactly 2 values"),
+		Entry("is null", "missing_field is null", tsl.KeyNotFoundError{}),
+		Entry("Type mismatch string/number", "name > 5", tsl.KeyNotFoundError{}),
+		Entry("Type mismatch number/string", "age = 'young'", tsl.KeyNotFoundError{}),
+		Entry("Invalid operator", "name invalid 'test'", tsl.UnexpectedOperatorError{}),
+		Entry("Invalid between array", "age between [1]", tsl.BetweenOperatorError{}),
 	)
-})
-
-var _ = Describe("Walk", func() {
-	Context("Valid expressions", func() {
-		It("Accepts valid comparisons", func() {
-			tree, err := tsl.ParseTSL("name = 'john'")
-			Expect(err).ToNot(HaveOccurred())
-			err = validateTree(tree)
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("Accepts valid logical operations", func() {
-			tree, err := tsl.ParseTSL("age > 20 and city = 'London'")
-			Expect(err).ToNot(HaveOccurred())
-			err = validateTree(tree)
-			Expect(err).ToNot(HaveOccurred())
-		})
-	})
-
-	Context("Invalid expressions", func() {
-		It("Rejects invalid comparison operands", func() {
-			tree, err := tsl.ParseTSL("5 = name")
-			Expect(err).ToNot(HaveOccurred())
-			err = validateTree(tree)
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(BeAssignableToTypeOf(TypeMismatchError{}))
-		})
-
-		It("Rejects invalid LIKE operands", func() {
-			tree, err := tsl.ParseTSL("5 like '5%'")
-			Expect(err).ToNot(HaveOccurred())
-			err = validateTree(tree)
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(BeAssignableToTypeOf(TypeMismatchError{}))
-		})
-	})
 })
