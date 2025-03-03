@@ -1,0 +1,4 @@
+Parsing: age >= 25
+[GE]
+  [IDENTIFIER]: age
+  [NUMBER]: 25

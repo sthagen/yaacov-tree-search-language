@@ -1,0 +1,4 @@
+Parsing: age <= 25
+[LE]
+  [IDENTIFIER]: age
+  [NUMBER]: 25
