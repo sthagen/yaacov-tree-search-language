@@ -32,6 +32,13 @@ char *error_string = NULL;
 
 %}
 
+/* Bison semantic value type */
+%union {
+    ast_node *node;
+    double num;
+    char *str;
+}
+
 /* Token definitions */
 %token K_LIKE K_ILIKE K_AND K_OR K_BETWEEN K_IN K_IS K_NULL
 %token K_NOT K_TRUE K_FALSE
@@ -51,17 +58,10 @@ char *error_string = NULL;
 %left STAR SLASH PERCENT           /* * / % */
 %right K_NOT                       /* unary NOT */
 
-/* Bison semantic value type */
-%union {
-    ast_node *node;
-    double num;
-    char *str;
-}
-
 /* Nonterminal types */
 %type <node> input expr or_expr and_expr comparison_expr
 %type <node> additive_expr multiplicative_expr not_expr unary_expr
-%type <node> primary array_elements array
+%type <node> primary array_elements array opt_array_elements
 
 %start input
 
@@ -132,7 +132,6 @@ comparison_expr:
         ast_node *in_expr = ast_create_binary(K_IN, $1, $4);
         $$ = ast_create_unary(K_NOT, in_expr);
     }
-    | K_NOT comparison_expr               { $$ = ast_create_unary(K_NOT, $2); }
     ;
 
 additive_expr:
@@ -162,8 +161,13 @@ unary_expr:
     ;
 
 array:
-      LPAREN array_elements RPAREN     { $$ = $2; }
-    | LBRACKET array_elements RBRACKET { $$ = $2; }
+      LPAREN opt_array_elements RPAREN     { $$ = $2; }
+    | LBRACKET opt_array_elements RBRACKET { $$ = $2; }
+    ;
+
+opt_array_elements:
+      /* empty */                 { $$ = ast_create_array(0, NULL); } /* Empty array */
+    | array_elements              { $$ = $1; }
     ;
 
 array_elements:
@@ -184,6 +188,7 @@ array_elements:
                                       free(elements);
                                       ast_free($1);
                                     }
+    | array_elements COMMA         { $$ = $1; } /* Trailing comma */
     ;
 
 primary:
