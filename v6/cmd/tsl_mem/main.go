@@ -54,12 +54,10 @@ func main() {
 	// Parse input string into a TSL tree.
 	tree, err := tsl.ParseTSL(*inputPtr)
 	check(err)
-	defer tree.Free()
 
 	// Walk the TSL tree and replace identifiers.
 	newTree, err := ident.Walk(tree, checkColumnName)
 	check(err)
-	defer newTree.Free()
 
 	// Prepare the books in memory collection.
 	err = prepareCollection()

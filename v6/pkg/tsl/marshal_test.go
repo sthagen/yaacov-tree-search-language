@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gopkg.in/yaml.v3"
 )
@@ -20,7 +19,6 @@ var _ = Describe("TSL Node Marshaling", func() {
 		func(input string, expectedJSON string, expectedYAML string) {
 			node, err := ParseTSL(input)
 			Expect(err).NotTo(HaveOccurred())
-			defer node.Free()
 
 			// Test JSON marshaling
 			jsonBytes, err := json.Marshal(node)

@@ -21,7 +21,6 @@ func parseFilter(input string) {
     fmt.Printf("Invalid filter: %s\n", err)
     return
   }
-  defer tree.Free()
 
   // If we reach here, syntax is valid; tree can be marshaled to JSON/YAML
   data, _ := tree.MarshalJSON()
@@ -49,7 +48,6 @@ records := []map[string]interface{}{
 }
 
 tree, _ := tsl.ParseTSL("age >= 28")
-defer tree.Free()
 
 for _, rec := range records {
   eval := func(field string) (interface{}, bool) {
@@ -82,7 +80,6 @@ import (
 )
 
 tree, _ := tsl.ParseTSL("status = 'active' AND score > 50")
-defer tree.Free()
 
 filter, _ := sql.Walk(tree) // returns a squirrel.Sqlizer
 query, args, _ := sq.Select("*").
@@ -112,7 +109,6 @@ import (
 )
 
 tree, _ := tsl.ParseTSL("name LIKE '%doe%' OR (age BETWEEN 20 AND 30)")
-defer tree.Free()
 
 dotContent, _ := graphviz.Walk("", tree, "FilterTree")
 dot := fmt.Sprintf("digraph FilterTree {\n%s\n}", dotContent)
@@ -147,10 +143,8 @@ mapper := func(id string) (string, error) {
 }
 
 tree, _ := tsl.ParseTSL("user = 'alice' AND balance > 1000")
-defer tree.Free()
 
 newTree, _ := ident.Walk(tree, mapper)
-defer newTree.Free()
 
 // newTree now uses "customers.name" and "accounts.current_balance"
 ```

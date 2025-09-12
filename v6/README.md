@@ -236,7 +236,6 @@ tree, err := tsl.ParseTSL("name in ('joe', 'jane') and grade not between 0 and 5
 if err != nil {
     log.Fatal(err)
 }
-defer tree.Free()
 ```
 
 After parsing the TSL tree will look like this (image created using the `tsl_parser` cli utility using `.dot` output option):
@@ -260,7 +259,6 @@ tree, err := tsl.ParseTSL("name in ('joe', 'jane') and grade not between 0 and 5
 if err != nil {
     log.Fatal(err)
 }
-defer tree.Free()
 
 // Prepare squirrel filter.
 filter, err := sql.Walk(tree)
@@ -304,7 +302,6 @@ tree, err := tsl.ParseTSL("name in ('joe', 'jane') and grade not between 0 and 5
 if err != nil {
     log.Fatal(err)
 }
-defer tree.Free()
 
 // Prepare .dot file nodes as a string.
 s, err = graphviz.Walk("", tree, "")
@@ -354,14 +351,12 @@ tree, err := tsl.ParseTSL("name in ('joe', 'jane') and grade not between 0 and 5
 if err != nil {
     log.Fatal(err)
 }
-defer tree.Free()
 
 // Check and replace user identifiers with the SQL table column names.
 newTree, err = ident.Walk(tree, checkColumnName)
 if err != nil {
     log.Fatal(err)
 }
-defer newTree.Free() // mewTree is a clone that needs freeing.
 ...
 ```
 

@@ -3,8 +3,7 @@ package graphviz
 import (
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/yaacov/tree-search-language/v6/pkg/tsl"
@@ -20,7 +19,6 @@ var _ = Describe("Walk", func() {
 		func(input string, expectedContent []string) {
 			tree, err := tsl.ParseTSL(input)
 			Expect(err).ToNot(HaveOccurred())
-			defer tree.Free()
 
 			got, err := Walk("", tree, "")
 			Expect(err).ToNot(HaveOccurred())
