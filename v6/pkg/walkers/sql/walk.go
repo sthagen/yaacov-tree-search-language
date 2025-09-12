@@ -41,7 +41,15 @@ func Walk(n *tsl.TSLNode) (s sq.Sqlizer, err error) {
 		s = sq.Expr(n.Value().(string))
 	case tsl.KindNumericLiteral:
 		s = sq.Expr("?", n.Value().(float64))
-	case tsl.KindDateLiteral, tsl.KindTimestampLiteral:
+	case tsl.KindDateLiteral:
+		// Parse date string and format for SQL
+		dateStr := n.Value().(string)
+		if t, err := time.Parse("2006-01-02", dateStr); err == nil {
+			s = sq.Expr("?", t.Format("2006-01-02 15:04:05"))
+		} else {
+			s = sq.Expr("?", dateStr)
+		}
+	case tsl.KindTimestampLiteral:
 		// Format time value using SQL timestamp format
 		t := n.Value().(time.Time)
 		s = sq.Expr("?", t.Format("2006-01-02 15:04:05"))

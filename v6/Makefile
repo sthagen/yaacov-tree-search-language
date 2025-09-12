@@ -27,7 +27,7 @@ GO_MEM_BIN = tsl_mem
 #------------------------------------------------------------------------------
 # Phony targets
 #------------------------------------------------------------------------------
-.PHONY: all clean help generate lint test test-coverage install-tools format generate-parser test-stability
+.PHONY: all clean clean-all help generate lint test test-coverage install-tools format generate-parser test-stability
 
 # Default target
 all: generate tsl tsl_parser tsl_mem
@@ -92,14 +92,16 @@ test-coverage: tsl
 	$(GO) tool cover -html=coverage.out
 
 generate-parser:
-	cd pkg/parser && ./build.sh
+	cd pkg/parser && go generate
 
 clean:
 	rm -rf $(GO_BIN) $(GO_PARSER_BIN) $(GO_MEM_BIN) coverage.out
 
-clean-all:
-	rm -rf pkg/tsl/tsl_parser.tab.* pkg/tsl/lex.yy.c $(GO_BIN) $(GO_PARSER_BIN) $(GO_MEM_BIN) coverage.out
+clean-all: clean
+	rm -rf pkg/parser/parser.go pkg/parser/y.output
+	$(GO) clean -cache -testcache -modcache
 
 install-tools:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install golang.org/x/tools/cmd/goyacc@latest
 

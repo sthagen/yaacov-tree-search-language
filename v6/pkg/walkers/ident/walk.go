@@ -53,7 +53,6 @@ import (
 //	// If the input tree contains: `spec.pages > 100 AND author = "Joe"`,
 //	// the new tree will contain: `pages > 100 AND author = "Joe"`
 //	newTree, err = ident.Walk(tree, check)
-//	defer newTree.Free()
 func Walk(n *tsl.TSLNode, check func(s string) (string, error)) (*tsl.TSLNode, error) {
 	if n == nil {
 		return nil, nil
@@ -67,7 +66,7 @@ func Walk(n *tsl.TSLNode, check func(s string) (string, error)) (*tsl.TSLNode, e
 
 	newTree, err := walkAndReplace(treeCopy, check)
 	if err != nil {
-		treeCopy.Free() // Clean up the copy if there's an error
+		// Error occurred during processing
 		return nil, err
 	}
 
