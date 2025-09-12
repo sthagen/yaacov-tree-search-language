@@ -20,8 +20,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/yaacov/tree-search-language/v6/pkg/tsl"
@@ -61,7 +60,6 @@ var _ = Describe("Walk", func() {
 			// Parse the text:
 			tree, err := tsl.ParseTSL(text)
 			Expect(err).ToNot(HaveOccurred())
-			defer tree.Free()
 
 			// Get the value:
 			actual, err := Walk(tree, eval)
@@ -232,7 +230,6 @@ var _ = Describe("Walk error cases", func() {
 				}
 			}
 			Expect(err).ToNot(HaveOccurred())
-			defer tree.Free()
 
 			_, err = Walk(tree, eval)
 			Expect(err).To(HaveOccurred())

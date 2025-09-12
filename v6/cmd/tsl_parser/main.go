@@ -53,7 +53,6 @@ func main() {
 	// Parse input string into a TSL tree.
 	tree, err := tsl.ParseTSL(*inputPtr)
 	check(err)
-	defer tree.Free()
 
 	switch *outputPtr {
 	case "json":

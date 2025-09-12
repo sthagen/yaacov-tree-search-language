@@ -29,7 +29,6 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	defer tree.Free()
 
 	printer := NewASTPrinter()
 	printer.Print(tree, 0)
