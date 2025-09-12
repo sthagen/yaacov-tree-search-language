@@ -66,7 +66,6 @@ func Walk(n *tsl.TSLNode, check func(s string) (string, error)) (*tsl.TSLNode, e
 
 	newTree, err := walkAndReplace(treeCopy, check)
 	if err != nil {
-		// Error occurred during processing
 		return nil, err
 	}
 
@@ -95,54 +94,59 @@ func walkAndReplace(n *tsl.TSLNode, check func(s string) (string, error)) (*tsl.
 		op := n.Value().(tsl.TSLExpressionOp)
 
 		// Process both sides of the binary expression
-		left := op.Left
-		if left.Type() == tsl.KindIdentifier {
-			newNode, err := processIdentifier(left, check)
+		var processedLeft, processedRight *tsl.TSLNode
+		var err error
+
+		if op.Left.Type() == tsl.KindIdentifier {
+			processedLeft, err = processIdentifier(op.Left, check)
 			if err != nil {
 				return nil, err
 			}
-			n.AttachLeft(newNode)
 		} else {
-			_, err := walkAndReplace(left, check)
+			processedLeft, err = walkAndReplace(op.Left, check)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		right := op.Right
-		if right.Type() == tsl.KindIdentifier {
-			newNode, err := processIdentifier(right, check)
+		if op.Right.Type() == tsl.KindIdentifier {
+			processedRight, err = processIdentifier(op.Right, check)
 			if err != nil {
 				return nil, err
 			}
-			n.AttachRight(newNode)
 		} else {
-			_, err := walkAndReplace(right, check)
+			processedRight, err = walkAndReplace(op.Right, check)
 			if err != nil {
 				return nil, err
 			}
 		}
 
+		// Update the binary expression with the processed children
+		n.Node.Left = processedLeft.Node
+		n.Node.Right = processedRight.Node
 		return n, nil
 
 	case tsl.KindUnaryExpr:
 		op := n.Value().(tsl.TSLExpressionOp)
 
 		// Process the operand
-		right := op.Right
-		if right.Type() == tsl.KindIdentifier {
-			newNode, err := processIdentifier(right, check)
+		var processedRight *tsl.TSLNode
+		var err error
+
+		if op.Right.Type() == tsl.KindIdentifier {
+			processedRight, err = processIdentifier(op.Right, check)
 			if err != nil {
 				return nil, err
 			}
-			n.AttachChild(newNode)
 		} else {
-			_, err := walkAndReplace(right, check)
+			processedRight, err = walkAndReplace(op.Right, check)
 			if err != nil {
 				return nil, err
 			}
 		}
 
+		// Update the unary expression with the processed child
+		n.Node.Right = processedRight.Node
 		return n, nil
 
 	case tsl.KindIdentifier:

@@ -22,7 +22,7 @@ import (
 // TSLNode represents a tree search language AST (Abstract Syntax Tree) node
 // This provides the public interface for TSL parsing results
 type TSLNode struct {
-	node *Node
+	Node *Node
 }
 
 // TSLExpressionOp represents both unary and binary operations
@@ -40,7 +40,7 @@ type TSLArrayLiteral struct {
 func ParseTSL(input string) (*TSLNode, error) {
 	parserNode, err := parser.Parse(input)
 	if err != nil {
-		// Convert parser error to TSL error type
+		// Return a TSL-specific error with position information
 		if parseErr, ok := err.(*parser.ParseError); ok {
 			return nil, &SyntaxError{
 				Message:  parseErr.Message,
@@ -52,64 +52,64 @@ func ParseTSL(input string) (*TSLNode, error) {
 		return nil, err
 	}
 
-	// Convert parser node to TSL node
+	// Create TSL node from parsed input
 	tslNode := wrapParserNode(parserNode)
-	return &TSLNode{node: tslNode}, nil
+	return &TSLNode{Node: tslNode}, nil
 }
 
 // Clone creates a deep copy of the TSLNode and its children
 func (n *TSLNode) Clone() *TSLNode {
-	if n == nil || n.node == nil {
+	if n == nil || n.Node == nil {
 		return nil
 	}
-	return &TSLNode{node: n.node.Clone()}
+	return &TSLNode{Node: n.Node.Clone()}
 }
 
 // Type returns the type of the node
 func (n *TSLNode) Type() Kind {
-	if n == nil || n.node == nil {
+	if n == nil || n.Node == nil {
 		return Kind(-1)
 	}
-	return n.node.Kind
+	return n.Node.Kind
 }
 
 // Value returns the node's value based on its type
 func (n *TSLNode) Value() interface{} {
-	if n == nil || n.node == nil {
+	if n == nil || n.Node == nil {
 		return nil
 	}
 
-	switch n.node.Kind {
+	switch n.Node.Kind {
 	case KindBooleanLiteral, KindNumericLiteral, KindStringLiteral,
 		KindIdentifier, KindDateLiteral, KindTimestampLiteral:
-		return n.node.Value
+		return n.Node.Value
 	case KindBinaryExpr:
 		var left, right *TSLNode
-		if n.node.Left != nil {
-			left = &TSLNode{node: n.node.Left}
+		if n.Node.Left != nil {
+			left = &TSLNode{Node: n.Node.Left}
 		}
-		if n.node.Right != nil {
-			right = &TSLNode{node: n.node.Right}
+		if n.Node.Right != nil {
+			right = &TSLNode{Node: n.Node.Right}
 		}
 		return TSLExpressionOp{
-			Operator: n.node.Operator,
+			Operator: n.Node.Operator,
 			Left:     left,
 			Right:    right,
 		}
 	case KindUnaryExpr:
 		var right *TSLNode
-		if n.node.Right != nil {
-			right = &TSLNode{node: n.node.Right}
+		if n.Node.Right != nil {
+			right = &TSLNode{Node: n.Node.Right}
 		}
 		return TSLExpressionOp{
-			Operator: n.node.Operator,
+			Operator: n.Node.Operator,
 			Left:     nil,
 			Right:    right,
 		}
 	case KindArrayLiteral:
-		values := make([]*TSLNode, len(n.node.Children))
-		for i, child := range n.node.Children {
-			values[i] = &TSLNode{node: child}
+		values := make([]*TSLNode, len(n.Node.Children))
+		for i, child := range n.Node.Children {
+			values[i] = &TSLNode{Node: child}
 		}
 		return TSLArrayLiteral{Values: values}
 	case KindNullLiteral:
@@ -117,64 +117,4 @@ func (n *TSLNode) Value() interface{} {
 	default:
 		return nil
 	}
-}
-
-// DetachLeft safely detaches and returns the left child of a binary expression node
-func (n *TSLNode) DetachLeft() *TSLNode {
-	if n == nil || n.node == nil || n.node.Kind != KindBinaryExpr || n.node.Left == nil {
-		return nil
-	}
-	left := n.node.Left
-	n.node.Left = nil
-	return &TSLNode{node: left}
-}
-
-// DetachRight safely detaches and returns the right child of a binary expression node
-func (n *TSLNode) DetachRight() *TSLNode {
-	if n == nil || n.node == nil || n.node.Kind != KindBinaryExpr || n.node.Right == nil {
-		return nil
-	}
-	right := n.node.Right
-	n.node.Right = nil
-	return &TSLNode{node: right}
-}
-
-// DetachChild safely detaches and returns the child of a unary expression node
-func (n *TSLNode) DetachChild() *TSLNode {
-	if n == nil || n.node == nil || n.node.Kind != KindUnaryExpr || n.node.Right == nil {
-		return nil
-	}
-	child := n.node.Right
-	n.node.Right = nil
-	return &TSLNode{node: child}
-}
-
-// AttachLeft safely attaches a child node as the left child of a binary expression node
-func (n *TSLNode) AttachLeft(child *TSLNode) bool {
-	if n == nil || n.node == nil || child == nil || child.node == nil ||
-		n.node.Kind != KindBinaryExpr {
-		return false
-	}
-	n.node.Left = child.node
-	return true
-}
-
-// AttachRight safely attaches a child node as the right child of a binary expression node
-func (n *TSLNode) AttachRight(child *TSLNode) bool {
-	if n == nil || n.node == nil || child == nil || child.node == nil ||
-		n.node.Kind != KindBinaryExpr {
-		return false
-	}
-	n.node.Right = child.node
-	return true
-}
-
-// AttachChild safely attaches a child node to a unary expression node
-func (n *TSLNode) AttachChild(child *TSLNode) bool {
-	if n == nil || n.node == nil || child == nil || child.node == nil ||
-		n.node.Kind != KindUnaryExpr {
-		return false
-	}
-	n.node.Right = child.node
-	return true
 }
