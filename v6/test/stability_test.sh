@@ -82,6 +82,7 @@ echo "Starting TSL stability tests..."
 
 # Basic Operators (01-10)
 run_test "01_op_equality" "${TSL_BIN} 'name = \"bob\"'"
+run_test "63_op_double_equal" "${TSL_BIN} 'name == \"bob\"'"
 run_test "02_op_inequality" "${TSL_BIN} 'name != \"alice\"'"
 run_test "03_op_greater_than" "${TSL_BIN} 'age > 25'"
 run_test "04_op_less_than" "${TSL_BIN} 'age < 25'"
