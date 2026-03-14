@@ -243,3 +243,42 @@ var _ = Describe("Walk error cases", func() {
 		Entry("Invalid between array", "age between [1]", tsl.BetweenOperatorError{}),
 	)
 })
+
+var _ = Describe("Walk nil value cases", func() {
+	eval := func(name string) (interface{}, bool) {
+		if name == "nullable_field" {
+			return nil, true
+		}
+		return nil, false
+	}
+
+	DescribeTable("Returns false (not error) when comparing or pattern-matching with nil",
+		func(text string, expected interface{}) {
+			tree, err := tsl.ParseTSL(text)
+			Expect(err).ToNot(HaveOccurred())
+
+			actual, err := Walk(tree, eval)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(expected))
+		},
+
+		// Comparison operators with nil
+		Entry("nil greater than", "nullable_field > 5", false),
+		Entry("nil less than", "nullable_field < 5", false),
+		Entry("nil greater than or equal", "nullable_field >= 5", false),
+		Entry("nil less than or equal", "nullable_field <= 5", false),
+
+		// Regex operators with nil
+		Entry("nil regex match", "nullable_field ~= 'pattern'", false),
+		Entry("nil regex not match", "nullable_field ~! 'pattern'", true),
+
+		// Like/ILike operators with nil
+		Entry("nil like", "nullable_field like '%test%'", false),
+		Entry("nil ilike", "nullable_field ilike '%TEST%'", false),
+
+		// Equality with nil (already works, but verify)
+		Entry("nil equals string", "nullable_field = 'something'", false),
+		Entry("nil not equals string", "nullable_field != 'something'", true),
+		Entry("nil is null", "nullable_field is null", true),
+	)
+})
