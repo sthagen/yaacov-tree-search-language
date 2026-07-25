@@ -25,7 +25,7 @@ import (
 	"github.com/yaacov/tree-search-language/v6/pkg/walkers/semantics"
 )
 
-// Book represent one book in our in-memmory data base.
+// Book represent one book in our in-memory data base.
 type Book map[string]interface{}
 
 // Books are the demo list of books.
@@ -40,10 +40,10 @@ var columnNamesMap = map[string]string{
 	"on_loan": "onloan",
 }
 
-// checkColumnName checks if a coulumn name is valid in user space replace it
-// with the mapped column name and returns and error if not a valid name.
+// checkColumnName checks if a column name is valid in user space replace it
+// with the mapped column name and returns an error if not a valid name.
 func checkColumnName(s string) (string, error) {
-	// Chekc for column name in map.
+	// Check for column name in map.
 	if v, ok := columnNamesMap[s]; ok {
 		return v, nil
 	}
@@ -58,7 +58,7 @@ func evalFactory(book Book) semantics.EvalFunc {
 			return v, true
 		}
 
-		// we optional fields, we should return defatult value for them.
+		// for optional fields, we should return default value for them.
 		switch k {
 		case "spec.pages":
 			return nil, true
@@ -75,20 +75,20 @@ func prepareCollection() (err error) {
 	for _, b := range model.Books {
 		// Create a new book.
 		newBook := Book{
-			"title":  b.(model.Book).Title,
-			"author": b.(model.Book).Author,
-			"onloan": b.(model.Book).OnLoan,
+			"title":  b.Title,
+			"author": b.Author,
+			"onloan": b.OnLoan,
 		}
 
 		// Add optional parameters.
-		if b.(model.Book).Spec.Pages > 0 {
-			newBook["spec.pages"] = b.(model.Book).Spec.Pages
+		if b.Spec.Pages > 0 {
+			newBook["spec.pages"] = b.Spec.Pages
 		}
-		if b.(model.Book).Spec.Rating > 0 {
-			newBook["spec.rating"] = b.(model.Book).Spec.Rating
+		if b.Spec.Rating > 0 {
+			newBook["spec.rating"] = b.Spec.Rating
 		}
 
-		// Insert new book to the books arra.
+		// Insert new book to the books array.
 		Books = append(Books, newBook)
 	}
 

@@ -122,8 +122,8 @@ func walkAndReplace(n *tsl.TSLNode, check func(s string) (string, error)) (*tsl.
 		}
 
 		// Update the binary expression with the processed children
-		n.Node.Left = processedLeft.Node
-		n.Node.Right = processedRight.Node
+		n.SetLeft(processedLeft)
+		n.SetRight(processedRight)
 		return n, nil
 
 	case tsl.KindUnaryExpr:
@@ -146,11 +146,24 @@ func walkAndReplace(n *tsl.TSLNode, check func(s string) (string, error)) (*tsl.
 		}
 
 		// Update the unary expression with the processed child
-		n.Node.Right = processedRight.Node
+		n.SetRight(processedRight)
 		return n, nil
 
 	case tsl.KindIdentifier:
 		return processIdentifier(n, check)
+
+	case tsl.KindArrayLiteral:
+		arr := n.Value().(tsl.TSLArrayLiteral)
+		newValues := make([]*tsl.TSLNode, len(arr.Values))
+		for i, child := range arr.Values {
+			processed, err := walkAndReplace(child, check)
+			if err != nil {
+				return nil, err
+			}
+			newValues[i] = processed
+		}
+		n.SetArrayValues(newValues)
+		return n, nil
 
 	default:
 		return n, nil
